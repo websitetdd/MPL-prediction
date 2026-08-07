@@ -7,6 +7,6 @@
  * Leave empty ("") to keep the pure localStorage mode.
  * ========================================================================== */
 window.SUPABASE_CONFIG = {
-  url: "",
-  anonKey: "",
+  url: "https://hnsxxdgeisbjqzvxgnds.supabase.co",
+  anonKey: "sb_publishable_0hLtdZCJ0krbrMum1cwEFQ_AKtipT0N",
 };
