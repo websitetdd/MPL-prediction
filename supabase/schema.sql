@@ -86,35 +86,53 @@ alter table public.profiles enable row level security;
 alter table public.predictions enable row level security;
 
 -- teams: public read, admin write
+drop policy if exists "teams_public_read" on public.teams;
 create policy "teams_public_read" on public.teams for select using (true);
+drop policy if exists "teams_admin_write" on public.teams;
 create policy "teams_admin_write" on public.teams for all using (public.is_admin()) with check (public.is_admin());
 
 -- matches: public read, admin write
+drop policy if exists "matches_public_read" on public.matches;
 create policy "matches_public_read" on public.matches for select using (true);
+drop policy if exists "matches_admin_write" on public.matches;
 create policy "matches_admin_write" on public.matches for all using (public.is_admin()) with check (public.is_admin());
 
 -- playoff_matches: public read, admin write
+drop policy if exists "playoff_public_read" on public.playoff_matches;
 create policy "playoff_public_read" on public.playoff_matches for select using (true);
+drop policy if exists "playoff_admin_write" on public.playoff_matches;
 create policy "playoff_admin_write" on public.playoff_matches for all using (public.is_admin()) with check (public.is_admin());
 
 -- news: public read, admin write
+drop policy if exists "news_public_read" on public.news;
 create policy "news_public_read" on public.news for select using (true);
+drop policy if exists "news_admin_write" on public.news;
 create policy "news_admin_write" on public.news for all using (public.is_admin()) with check (public.is_admin());
 
 -- settings: public read, admin write
+drop policy if exists "settings_public_read" on public.settings;
 create policy "settings_public_read" on public.settings for select using (true);
+drop policy if exists "settings_admin_write" on public.settings;
 create policy "settings_admin_write" on public.settings for all using (public.is_admin()) with check (public.is_admin());
 
 -- profiles: public read (leaderboard), users manage their own row
+drop policy if exists "profiles_public_read" on public.profiles;
 create policy "profiles_public_read" on public.profiles for select using (true);
+drop policy if exists "profiles_own_insert" on public.profiles;
 create policy "profiles_own_insert" on public.profiles for insert with check (auth.uid() = user_id);
+drop policy if exists "profiles_own_update" on public.profiles;
 create policy "profiles_own_update" on public.profiles for update using (auth.uid() = user_id or public.is_admin());
+drop policy if exists "profiles_own_delete" on public.profiles;
 create policy "profiles_own_delete" on public.profiles for delete using (auth.uid() = user_id or public.is_admin());
 
 -- predictions: users manage their own row; admins may view all
+drop policy if exists "predictions_own_select" on public.predictions;
 create policy "predictions_own_select" on public.predictions for select using (auth.uid() = user_id or public.is_admin());
+drop policy if exists "predictions_own_insert" on public.predictions;
 create policy "predictions_own_insert" on public.predictions for insert with check (auth.uid() = user_id);
+drop policy if exists "predictions_own_update" on public.predictions;
 create policy "predictions_own_update" on public.predictions for update using (auth.uid() = user_id or public.is_admin());
+drop policy if exists "predictions_own_delete" on public.predictions;
 create policy "predictions_own_delete" on public.predictions for delete using (auth.uid() = user_id or public.is_admin());
 
 -- ----------------------------------------------------------------------------
