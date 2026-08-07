@@ -102,14 +102,16 @@ const Cloud = (() => {
     return data && data.length ? data[0] : null;
   }
 
-  /** Upsert the public profile row (leaderboard + admin flag + stats) */
+  /** Upsert the public profile row (leaderboard + stats).
+   *  NOTE: is_admin is intentionally NEVER written here — it is granted only
+   *  via the SQL setup, so a normal login can never reset or self-grant it.
+   *  On insert the DB default (false) applies; on conflict it stays untouched. */
   async function syncProfile(username, userId) {
     const stats = Scoring.userStats(Store.predictionsFor(username));
     const { error } = await sb.from("profiles").upsert(
       {
         username,
         user_id: userId,
-        is_admin: false, // never self-grant; admin is set via SQL
         points_total: stats.total,
         correct: stats.correct,
         finished: stats.finished,
