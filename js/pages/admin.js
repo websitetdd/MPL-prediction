@@ -3,12 +3,15 @@
  * ========================================================================== */
 
 const PageAdmin = (() => {
-  const SCORE_OPTS = ["2-0", "2-1", "1-2", "0-2"];          // Best of 3
-  const BO5_OPTS = ["3-0", "3-1", "3-2", "2-3", "1-3", "0-3"]; // Best of 5
+  const SCORE_OPTS = ["2-0", "2-1", "1-2", "0-2"];                // Best of 3
+  const BO5_OPTS = ["3-0", "3-1", "3-2", "2-3", "1-3", "0-3"];    // Best of 5
+  const BO7_OPTS = ["4-0", "4-1", "4-2", "4-3", "3-4", "2-4", "1-4", "0-4"]; // Best of 7
 
-  /** Score options depend on the series length (playoffs are Bo5) */
+  /** Score options follow the series length set on the match */
   function scoreOptionsFor(m) {
-    return (m && m.bo === 5) ? BO5_OPTS : SCORE_OPTS;
+    if (m && m.bo === 7) return BO7_OPTS;
+    if (m && m.bo === 5) return BO5_OPTS;
+    return SCORE_OPTS;
   }
 
   /* ------------------------------- Gate ------------------------------- */
@@ -27,6 +30,7 @@ const PageAdmin = (() => {
     renderLiveForm();
     renderNewsList();
     renderWeeksForm();
+    renderPointsForm();
     renderSettings();
   }
 
@@ -161,9 +165,14 @@ const PageAdmin = (() => {
     return t ? t.name : "?";
   }
 
-  /** Winner + score controls used by both scheduled and finished rows */
+  /** Winner + score controls used by both scheduled and finished rows.
+   *  Includes a "Bo" dropdown so the series length can be changed on the fly
+   *  (regular and playoff matches alike). */
   function resultControls(m, applyLabel) {
     return (
+      `<select class="select" data-mbo="${esc(m.id)}" style="max-width:88px;" aria-label="Best of">` +
+      [3, 5, 7].map((b) => `<option value="${b}"${(m.bo || 3) === b ? " selected" : ""}>Bo${b}</option>`).join("") +
+      `</select>` +
       `<select class="select" data-rwinner="${esc(m.id)}" style="max-width:180px;" aria-label="Winner">` +
       `<option value="${esc(m.teamA)}">${esc(matchTeamName(m.teamA))}</option>` +
       `<option value="${esc(m.teamB)}">${esc(matchTeamName(m.teamB))}</option>` +
@@ -233,6 +242,19 @@ const PageAdmin = (() => {
       if (apply) applyResult(apply.dataset.rapply);
       if (reset) reopenMatch(reset.dataset.rreset);
     };
+    // Changing the Bo dropdown updates the series length for any match
+    [sched, fin].forEach((list) =>
+      list.addEventListener("change", (e) => {
+        const sel = e.target.closest("[data-mbo]");
+        if (!sel) return;
+        const m = Store.matchById(sel.dataset.mbo);
+        if (!m) return;
+        const updated = { ...m, bo: Number(sel.value) };
+        persistMatch(updated);
+        renderMatchLists();
+        UI.toast(`Series length updated to Bo${sel.value}.`, "success");
+      })
+    );
   }
 
   function isPlayoffMatch(m) {
@@ -246,6 +268,7 @@ const PageAdmin = (() => {
     $("#mfTeamA").value = m.teamA;
     $("#mfTeamB").value = m.teamB;
     $("#mfWeek").value = String(m.week || 1);
+    $("#mfBo").value = String(m.bo || 3);
     const d = new Date(m.date);
     $("#mfDate").value = d.toISOString().slice(0, 16); // local time
     $("#matchFormTitle").textContent = "Edit match";
@@ -340,16 +363,17 @@ const PageAdmin = (() => {
       const weeks = weekOptions();
       const wk = weeks.find((w) => w.num === weekNum);
       const weekLabel = wk ? wk.label : "Week " + weekNum;
+      const bo = Number($("#mfBo").value) || 3;
       const dateIso = dateVal.replace("T", "T") + ":00+07:00";
 
       const list = Store.matches();
       if (id) {
         const i = list.findIndex((m) => m.id === id);
-        if (i > -1) list[i] = { ...list[i], teamA, teamB, week: weekNum, weekLabel, date: dateIso, bo: 3 };
+        if (i > -1) list[i] = { ...list[i], teamA, teamB, week: weekNum, weekLabel, date: dateIso, bo };
         Store.saveMatches(list);
       } else {
         const slug = uid("m");
-        list.push({ id: slug, week: weekNum, weekLabel, teamA, teamB, date: dateIso, bo: 3, status: "scheduled" });
+        list.push({ id: slug, week: weekNum, weekLabel, teamA, teamB, date: dateIso, bo, status: "scheduled" });
         Store.saveMatches(list);
       }
       resetMatchForm();
@@ -474,7 +498,7 @@ const PageAdmin = (() => {
   function renderWeeksForm() {
     const cfg = Store.config();
     const weeks = (cfg.tournament && cfg.tournament.weeks) || [];
-    const cur = (cfg.tournament && cfg.tournament.currentWeek) || 1;
+    const cur = (cfg.tournament && cfg.tournament.currentWeek) || (weeks[0] ? weeks[0].num : 1);
     const box = $("#weeksList");
     box.innerHTML = weeks
       .map(
@@ -483,6 +507,9 @@ const PageAdmin = (() => {
           `<span class="lr-name" style="flex-basis:100%;"><b>${esc(w.label)}</b> <span class="muted">· ${esc(w.dates || "")}</span></span>` +
           `<input class="input" data-wlabel="${i}" value="${esc(w.label)}" style="max-width:130px;" aria-label="Week label">` +
           `<input class="input" data-wdates="${i}" value="${esc(w.dates || "")}" style="max-width:170px;" aria-label="Week dates">` +
+          (weeks.length > 1
+            ? `<button class="btn btn-danger btn-sm" data-wdel="${i}" title="Remove week" aria-label="Remove ${esc(w.label)}">✕</button>`
+            : "") +
           `</div>`
       )
       .join("");
@@ -490,19 +517,84 @@ const PageAdmin = (() => {
     $("#curWeek").value = String(cur);
   }
 
+  function renderPointsForm() {
+    const cfg = Store.config();
+    const r = cfg.predictionRules || {};
+    const def = typeof Scoring !== "undefined" ? Scoring.DEFAULT_RULES : {};
+    $("#ptWinner").value = r.correctWinner ?? def.correctWinner ?? 100;
+    $("#ptScore").value = r.correctScore ?? def.correctScore ?? 200;
+    $("#ptTopExact").value = r.seasonExact ?? def.seasonExact ?? 100;
+    $("#ptTopIn").value = r.seasonInTop6 ?? def.seasonInTop6 ?? 50;
+    $("#ptChamp").value = r.champion ?? def.champion ?? 500;
+  }
+
+  /** Read the week rows back into config (keeps unsaved edits before add/del) */
+  function collectWeeks() {
+    const cfg = Store.config();
+    const weeks = (cfg.tournament && cfg.tournament.weeks) || [];
+    weeks.forEach((w, i) => {
+      const label = $(`[data-wlabel="${i}"]`)?.value.trim();
+      if (label) w.label = label;
+      const dates = $(`[data-wdates="${i}"]`)?.value.trim();
+      if (dates) w.dates = dates;
+    });
+    return weeks;
+  }
+
   function wireWeeksForm() {
     $("#saveWeeksBtn").addEventListener("click", () => {
       const cfg = Store.config();
-      const weeks = (cfg.tournament && cfg.tournament.weeks) || [];
-      weeks.forEach((w, i) => {
-        const label = $(`[data-wlabel="${i}"]`).value.trim();
-        if (label) w.label = label;
-        const dates = $(`[data-wdates="${i}"]`).value.trim();
-        if (dates) w.dates = dates;
-      });
+      collectWeeks();
       cfg.tournament.currentWeek = Number($("#curWeek").value);
       Store.saveConfig(cfg);
       UI.toast("Weeks saved.", "success");
+    });
+
+    $("#addWeekBtn").addEventListener("click", () => {
+      const cfg = Store.config();
+      const weeks = collectWeeks();
+      const next = weeks.length ? Math.max(...weeks.map((w) => w.num)) + 1 : 1;
+      weeks.push({ num: next, label: "Week " + next, dates: "" });
+      cfg.tournament.weeks = weeks;
+      renderWeeksForm();
+    });
+
+    $("#weeksList").addEventListener("click", (e) => {
+      const del = e.target.closest("[data-wdel]");
+      if (!del) return;
+      const cfg = Store.config();
+      const weeks = collectWeeks();
+      const i = Number(del.dataset.wdel);
+      if (weeks.length <= 1) {
+        UI.toast("Keep at least one week.", "error");
+        return;
+      }
+      weeks.splice(i, 1);
+      cfg.tournament.weeks = weeks;
+      if (cfg.tournament.currentWeek === weeks[i]?.num) {
+        cfg.tournament.currentWeek = weeks[0] ? weeks[0].num : 1;
+      }
+      renderWeeksForm();
+      UI.toast("Week removed (click Save weeks to keep it).", "info");
+    });
+  }
+
+  function wirePointsForm() {
+    $("#savePointsBtn").addEventListener("click", () => {
+      const cfg = Store.config();
+      const num = (v, fallback) => {
+        const n = Number(v);
+        return Number.isFinite(n) && n >= 0 ? n : fallback;
+      };
+      cfg.predictionRules = {
+        correctWinner: num($("#ptWinner").value, 100),
+        correctScore: num($("#ptScore").value, 200),
+        seasonExact: num($("#ptTopExact").value, 100),
+        seasonInTop6: num($("#ptTopIn").value, 50),
+        champion: num($("#ptChamp").value, 500),
+      };
+      Store.saveConfig(cfg);
+      UI.toast("Prediction points saved — scores update immediately.", "success");
     });
   }
 
@@ -558,6 +650,7 @@ const PageAdmin = (() => {
     wireLiveForm();
     wireNewsForm();
     wireWeeksForm();
+    wirePointsForm();
     wireSettings();
 
     $("#adminLoginForm").addEventListener("submit", async (e) => {
