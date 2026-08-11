@@ -223,9 +223,17 @@ const Store = (() => {
 
   /* ------------------------------------------------------------------
    * Standings engine
-   * Rules: win (2-0 or 2-1) = 1 point.
+   * Points per win are admin-configurable per score line
+   * (config.standingsPoints, e.g. { "2-0": 3, "2-1": 2 }); default 1.
    * Ranking: 1) total points  2) head-to-head  3) game difference.
    * ------------------------------------------------------------------ */
+
+  function standingsPointValue(scoreStr) {
+    const cfg = config() || {};
+    const sp = cfg.standingsPoints || { "2-0": 1, "2-1": 1 };
+    const v = Number(sp[scoreStr]);
+    return Number.isFinite(v) && v >= 0 ? v : 1;
+  }
 
   function computeStandings() {
     const ts = teams();
@@ -253,7 +261,8 @@ const Store = (() => {
         row.gamesAgainst += oppScore;
         if (m.result.winner === t.id) {
           row.wins += 1;
-          row.points += 1; // any 2-x win = 1 point
+          // Winner's score line decides the points (2-0 may differ from 2-1)
+          row.points += standingsPointValue(`${myScore}-${oppScore}`);
         } else {
           row.losses += 1;
         }
