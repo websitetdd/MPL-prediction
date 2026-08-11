@@ -292,7 +292,21 @@
                 </div>
               </div>
               <button class="btn btn-gold mt-8" id="savePointsBtn">Save points</button>
-              <p class="muted mt-8" style="font-size:.78rem;">Standings points (win = 1) stay fixed per tournament rules.</p>
+            </div>
+            <div class="card mt-16">
+              <h3 class="mb-16">Standings points (per win)</h3>
+              <p class="text-2 mb-16" style="font-size:.9rem;">Separate from prediction points — how many table points a series win is worth. Losses always give 0.</p>
+              <div class="grid grid-2" style="gap:12px;">
+                <div class="field">
+                  <label for="spWin20">Win 2-0</label>
+                  <input class="input" id="spWin20" type="number" min="0" step="1">
+                </div>
+                <div class="field">
+                  <label for="spWin21">Win 2-1</label>
+                  <input class="input" id="spWin21" type="number" min="0" step="1">
+                </div>
+              </div>
+              <button class="btn btn-gold mt-8" id="saveStandingsBtn">Save standings points</button>
             </div>
             <div class="card">
               <h3 class="mb-16">Security</h3>
