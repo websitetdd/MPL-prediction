@@ -228,11 +228,12 @@ const Store = (() => {
    * Ranking: 1) total points  2) head-to-head  3) game difference.
    * ------------------------------------------------------------------ */
 
-  function standingsPointValue(scoreStr) {
+  function standingsPointsFor(scoreStr, isWin) {
     const cfg = config() || {};
-    const sp = cfg.standingsPoints || { "2-0": 1, "2-1": 1 };
+    const sp = cfg.standingsPoints || { "2-0": 1, "2-1": 1, "1-2": 0, "0-2": 0 };
     const v = Number(sp[scoreStr]);
-    return Number.isFinite(v) && v >= 0 ? v : 1;
+    if (Number.isFinite(v) && v >= 0) return v;
+    return isWin ? 1 : 0; // default: win = 1, loss = 0
   }
 
   function computeStandings() {
@@ -262,9 +263,11 @@ const Store = (() => {
         if (m.result.winner === t.id) {
           row.wins += 1;
           // Winner's score line decides the points (2-0 may differ from 2-1)
-          row.points += standingsPointValue(`${myScore}-${oppScore}`);
+          row.points += standingsPointsFor(`${myScore}-${oppScore}`, true);
         } else {
           row.losses += 1;
+          // Losers can also earn points from their score line (e.g. 1-2)
+          row.points += standingsPointsFor(`${myScore}-${oppScore}`, false);
         }
       });
       row.gameDiff = row.gamesFor - row.gamesAgainst;
