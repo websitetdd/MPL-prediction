@@ -32,6 +32,14 @@ const PagePredictions = (() => {
     return Store.matches().filter((m) => m.status !== "finished" && m.status !== "pending");
   }
 
+  /** Correct-score options follow the series length (Bo3 / Bo5 / Bo7) */
+  function scoreOptions(m) {
+    const bo = (m && m.bo) || 3;
+    if (bo === 7) return ["4-0", "4-1", "4-2", "4-3", "3-4", "2-4", "1-4", "0-4"];
+    if (bo === 5) return ["3-0", "3-1", "3-2", "2-3", "1-3", "0-3"];
+    return ["2-0", "2-1", "1-2", "0-2"];
+  }
+
   function renderMatchPredictions() {
     const grid = $("#predMatchGrid");
     const empty = $("#predMatchEmpty");
@@ -81,7 +89,7 @@ const PagePredictions = (() => {
       `<div class="field"><label>Correct score</label>` +
       `<select class="select" data-score="${esc(m.id)}">` +
       `<option value="">Choose score…</option>` +
-      ["2-0", "2-1", "1-2", "0-2"].map((s) => `<option value="${s}"${saved && saved.score === s ? " selected" : ""}>${s}</option>`).join("") +
+      scoreOptions(m).map((s) => `<option value="${s}"${saved && saved.score === s ? " selected" : ""}>${s}</option>`).join("") +
       `</select></div>` +
       `<div class="flex-between">` +
       `<button class="btn btn-gold btn-sm" data-save="${esc(m.id)}">Save prediction</button>` +
