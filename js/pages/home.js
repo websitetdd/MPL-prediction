@@ -7,12 +7,23 @@ const PageHome = (() => {
 
   function init() {
     renderStream();
+    renderWeekBadge();
     renderNextMatch();
     buildFilters();
     renderMatchGrid();
     renderMiniStandings();
     renderNews();
     startTicker();
+  }
+
+  /** Show the admin-set "current week" in the matches section header */
+  function renderWeekBadge() {
+    const el = $("#matchesWeekLabel");
+    if (!el) return;
+    const cfg = Store.config();
+    const t = cfg.tournament || {};
+    const wk = (t.weeks || []).find((w) => w.num === t.currentWeek);
+    el.textContent = wk ? `${wk.label}${wk.dates ? " · " + wk.dates : ""}` : "Season 2026";
   }
 
   /* ----------------------------- Stream ----------------------------- */
