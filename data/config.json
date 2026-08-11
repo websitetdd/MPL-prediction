@@ -28,7 +28,7 @@
     "format": {
       "type": "Best of 3",
       "winPoints": 1,
-      "note": "Regular season: win = 1 point (2-0 or 2-1). Ranking priority: Points, Head-to-Head, Game Difference."
+      "note": "Regular season: points per win are set by the league (2-0 and 2-1 can differ). Ranking priority: Points, Head-to-Head, Game Difference."
     }
   },
   "live": {
@@ -48,5 +48,9 @@
     "username": "admin",
     "password": "admin123",
     "hint": "Default admin credentials — change them in Admin > Settings."
+  },
+  "standingsPoints": {
+    "2-0": 1,
+    "2-1": 1
   }
 }
