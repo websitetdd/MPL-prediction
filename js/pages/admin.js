@@ -31,6 +31,7 @@ const PageAdmin = (() => {
     renderNewsList();
     renderWeeksForm();
     renderPointsForm();
+    renderStandingsForm();
     renderSettings();
   }
 
@@ -598,6 +599,29 @@ const PageAdmin = (() => {
     });
   }
 
+  function renderStandingsForm() {
+    const cfg = Store.config();
+    const sp = cfg.standingsPoints || { "2-0": 1, "2-1": 1 };
+    $("#spWin20").value = sp["2-0"] ?? 1;
+    $("#spWin21").value = sp["2-1"] ?? 1;
+  }
+
+  function wireStandingsForm() {
+    $("#saveStandingsBtn").addEventListener("click", () => {
+      const cfg = Store.config();
+      const num = (v, fallback) => {
+        const n = Number(v);
+        return Number.isFinite(n) && n >= 0 ? n : fallback;
+      };
+      cfg.standingsPoints = {
+        "2-0": num($("#spWin20").value, 1),
+        "2-1": num($("#spWin21").value, 1),
+      };
+      Store.saveConfig(cfg);
+      UI.toast("Standings points saved — the table recalculates everywhere.", "success");
+    });
+  }
+
   /* ----------------------------- Settings ----------------------------- */
 
   function renderSettings() {
@@ -651,6 +675,7 @@ const PageAdmin = (() => {
     wireNewsForm();
     wireWeeksForm();
     wirePointsForm();
+    wireStandingsForm();
     wireSettings();
 
     $("#adminLoginForm").addEventListener("submit", async (e) => {
