@@ -8,7 +8,7 @@
  * ========================================================================== */
 
 const Scoring = (() => {
-  const RULES = {
+  const DEFAULT_RULES = {
     correctWinner: 100,
     correctScore: 200,
     seasonExact: 100,
@@ -16,8 +16,17 @@ const Scoring = (() => {
     champion: 500,
   };
 
+  /** Active point values — merged from admin-editable config (data/config.json
+   *  → predictionRules), falling back to the defaults above. */
+  function rules() {
+    const cfg = Store.config() || {};
+    const r = cfg.predictionRules || {};
+    return { ...DEFAULT_RULES, ...r };
+  }
+
   /** Score one match prediction against its result */
   function scoreMatch(pred, match) {
+    const R = rules();
     if (!match || !pred) return { status: "pending", points: 0, winnerCorrect: false, scoreCorrect: false };
     if (match.status !== "finished" || !match.result) {
       return { status: "pending", points: 0, winnerCorrect: false, scoreCorrect: false };
@@ -25,7 +34,7 @@ const Scoring = (() => {
     const winnerCorrect = pred.winner === match.result.winner;
     const actualScore = `${match.result.scoreA}-${match.result.scoreB}`;
     const scoreCorrect = pred.score === actualScore;
-    const points = (winnerCorrect ? RULES.correctWinner : 0) + (scoreCorrect ? RULES.correctScore : 0);
+    const points = (winnerCorrect ? R.correctWinner : 0) + (scoreCorrect ? R.correctScore : 0);
     return {
       status: winnerCorrect ? "correct" : "wrong",
       points,
@@ -61,7 +70,8 @@ const Scoring = (() => {
       if (teamId === top6[i]) exact += 1;
       else if (top6.includes(teamId)) inTop6 += 1;
     });
-    const points = exact * RULES.seasonExact + inTop6 * RULES.seasonInTop6;
+    const R = rules();
+    const points = exact * R.seasonExact + inTop6 * R.seasonInTop6;
     return { points, status: "scored", exact, inTop6 };
   }
 
@@ -105,7 +115,7 @@ const Scoring = (() => {
       stats.champion = record.champion;
       if (champ) {
         stats.champStatus = record.champion === champ ? "correct" : "wrong";
-        if (stats.champStatus === "correct") stats.champPoints = RULES.champion;
+        if (stats.champStatus === "correct") stats.champPoints = rules().champion;
       }
     }
 
@@ -158,7 +168,7 @@ const Scoring = (() => {
   }
 
   return {
-    RULES, scoreMatch, seasonDone, championOf, scoreTop6, userStats,
+    rules, DEFAULT_RULES, scoreMatch, seasonDone, championOf, scoreTop6, userStats,
     leaderboard, mvpPick, weeklyPoints,
   };
 })();
