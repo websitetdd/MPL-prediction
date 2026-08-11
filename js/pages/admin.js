@@ -601,9 +601,11 @@ const PageAdmin = (() => {
 
   function renderStandingsForm() {
     const cfg = Store.config();
-    const sp = cfg.standingsPoints || { "2-0": 1, "2-1": 1 };
+    const sp = cfg.standingsPoints || { "2-0": 1, "2-1": 1, "1-2": 0, "0-2": 0 };
     $("#spWin20").value = sp["2-0"] ?? 1;
     $("#spWin21").value = sp["2-1"] ?? 1;
+    $("#spLoss12").value = sp["1-2"] ?? 0;
+    $("#spLoss02").value = sp["0-2"] ?? 0;
   }
 
   function wireStandingsForm() {
@@ -616,6 +618,8 @@ const PageAdmin = (() => {
       cfg.standingsPoints = {
         "2-0": num($("#spWin20").value, 1),
         "2-1": num($("#spWin21").value, 1),
+        "1-2": num($("#spLoss12").value, 0),
+        "0-2": num($("#spLoss02").value, 0),
       };
       Store.saveConfig(cfg);
       UI.toast("Standings points saved — the table recalculates everywhere.", "success");
