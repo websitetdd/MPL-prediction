@@ -14,6 +14,7 @@
     <div class="l-ring"></div>
     <div class="l-text">Loading arena</div>
   </div>
+  <script>setTimeout(function(){var l=document.getElementById("loader");if(l)l.classList.add("hidden");},15000);</script>
 
   <nav class="nav" data-component="nav-main">
     <div class="container nav-inner">
@@ -294,8 +295,8 @@
               <button class="btn btn-gold mt-8" id="savePointsBtn">Save points</button>
             </div>
             <div class="card mt-16">
-              <h3 class="mb-16">Standings points (per win)</h3>
-              <p class="text-2 mb-16" style="font-size:.9rem;">Separate from prediction points — how many table points a series win is worth. Losses always give 0.</p>
+              <h3 class="mb-16">Standings points</h3>
+              <p class="text-2 mb-16" style="font-size:.9rem;">Separate from prediction points — table points per score line. Winners and losers can both earn points.</p>
               <div class="grid grid-2" style="gap:12px;">
                 <div class="field">
                   <label for="spWin20">Win 2-0</label>
@@ -304,6 +305,14 @@
                 <div class="field">
                   <label for="spWin21">Win 2-1</label>
                   <input class="input" id="spWin21" type="number" min="0" step="1">
+                </div>
+                <div class="field">
+                  <label for="spLoss12">Lose 1-2</label>
+                  <input class="input" id="spLoss12" type="number" min="0" step="1">
+                </div>
+                <div class="field">
+                  <label for="spLoss02">Lose 0-2</label>
+                  <input class="input" id="spLoss02" type="number" min="0" step="1">
                 </div>
               </div>
               <button class="btn btn-gold mt-8" id="saveStandingsBtn">Save standings points</button>
