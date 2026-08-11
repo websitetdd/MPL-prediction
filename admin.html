@@ -151,6 +151,14 @@
                     <select class="select" id="mfWeek" required></select>
                   </div>
                   <div class="field">
+                    <label for="mfBo">Best of</label>
+                    <select class="select" id="mfBo">
+                      <option value="3" selected>Bo3</option>
+                      <option value="5">Bo5</option>
+                      <option value="7">Bo7</option>
+                    </select>
+                  </div>
+                  <div class="field">
                     <label for="mfDate">Date & time</label>
                     <input class="input" id="mfDate" type="datetime-local" required>
                   </div>
@@ -247,13 +255,44 @@
           <div class="grid grid-2">
             <div class="card">
               <h3 class="mb-16">Tournament weeks</h3>
-              <p class="text-2 mb-16" style="font-size:.9rem;">Rename weeks and set the current week (drives the "Week X" labels and the season prediction window).</p>
+              <p class="text-2 mb-16" style="font-size:.9rem;">Add, rename or remove weeks, then pick which week is currently being played. New weeks become available in the match creator.</p>
               <div id="weeksList"></div>
+              <div class="flex gap-8 mt-16">
+                <button class="btn btn-ghost btn-sm" id="addWeekBtn">+ Add week</button>
+                <button class="btn btn-violet btn-sm" id="saveWeeksBtn">Save weeks</button>
+              </div>
               <div class="field mt-16">
-                <label for="curWeek">Current week</label>
+                <label for="curWeek">Current week (shown as "on air" on the site)</label>
                 <select class="select" id="curWeek"></select>
               </div>
-              <button class="btn btn-violet mt-16" id="saveWeeksBtn">Save weeks</button>
+            </div>
+            <div class="card">
+              <h3 class="mb-16">Prediction points</h3>
+              <p class="text-2 mb-16" style="font-size:.9rem;">Points awarded per correct prediction. Changes apply immediately to new scores and to the history/leaderboard math.</p>
+              <div class="grid grid-2" style="gap:12px;">
+                <div class="field">
+                  <label for="ptWinner">Correct winner</label>
+                  <input class="input" id="ptWinner" type="number" min="0" step="5">
+                </div>
+                <div class="field">
+                  <label for="ptScore">Correct score</label>
+                  <input class="input" id="ptScore" type="number" min="0" step="5">
+                </div>
+                <div class="field">
+                  <label for="ptTopExact">Top 6 — exact spot</label>
+                  <input class="input" id="ptTopExact" type="number" min="0" step="5">
+                </div>
+                <div class="field">
+                  <label for="ptTopIn">Top 6 — in list</label>
+                  <input class="input" id="ptTopIn" type="number" min="0" step="5">
+                </div>
+                <div class="field">
+                  <label for="ptChamp">Champion</label>
+                  <input class="input" id="ptChamp" type="number" min="0" step="5">
+                </div>
+              </div>
+              <button class="btn btn-gold mt-8" id="savePointsBtn">Save points</button>
+              <p class="muted mt-8" style="font-size:.78rem;">Standings points (win = 1) stay fixed per tournament rules.</p>
             </div>
             <div class="card">
               <h3 class="mb-16">Security</h3>
