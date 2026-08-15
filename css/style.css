@@ -1516,6 +1516,28 @@ textarea.input {
   background: var(--gold-soft);
 }
 
+/* Locked prediction sections (match closed / Top 6 closed / champion closed) */
+.card.is-locked {
+  position: relative;
+}
+
+.card.is-locked .dd-list,
+.card.is-locked .dd-item,
+.card.is-locked .radio-pill,
+.card.is-locked .select,
+.card.is-locked input[type="radio"] {
+  pointer-events: none;
+}
+
+.card.is-locked .dd-list {
+  opacity: 0.55;
+}
+
+.match-card.is-locked {
+  border-color: rgba(229, 72, 77, 0.35);
+  opacity: 0.85;
+}
+
 .dd-item .dd-rank {
   font-family: var(--font-display);
   font-weight: 800;
